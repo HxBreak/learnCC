@@ -16,11 +16,11 @@ using namespace std;
 #define BUFFER_LEN = 8192
 
 class Http {
-    typedef void (*DataCallback)(const char * data, int size);
+    typedef std::function<void(const char *, size_t)> DataCallback;
 protected:
     const char* DEFAULT_METHOD = "GET";
     const char* DEFAULT_CONTENT_TYPE = "raw";
-    DataCallback callback;
+    DataCallback callback = nullptr;
     string *_method = nullptr;
     string *contentType = nullptr;
     string *data = nullptr;
@@ -161,11 +161,11 @@ public:
 };
 
 
-int fd = open("./d.html", O_WRONLY|O_CREAT|O_TRUNC);
 int main() {
     string c = "www.baidu.com";
+    int fd = open("./d.html", O_WRONLY|O_CREAT|O_TRUNC);
     auto h = new Http(c);
-    auto fn = [](const char * data, int size){
+    auto fn = [fd](const char * data, int size){
         cout << data;
         if(size > 0)
             write(fd, data, size);
