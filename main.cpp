@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <sstream>
 #include <functional>
+#include <vector>
 
 using namespace std;
 #define BUFFER_LEN = 8192
@@ -94,7 +95,8 @@ private:
         do {
             memset(buffer, 0, 8192);
             result = read(_fd, buffer, 8192);
-            if (buffer[result - 1] == '\n' && buffer[result - 2] == '\r') {
+//            cout << buffer;
+            if (result < 1) {
                 close(_fd);
             }
             if(body && result >= 0){
@@ -156,12 +158,13 @@ public:
 
 
 int main() {
-    string c = "www.cqzk.com.cn";
+    string c = "www.baidu.com";
     auto h = new Http(c);
     h->setCallback([](const char * data){
-        cout << data << endl;
+        cout << data;
     });
     h->exec();
+
     return 0;
 }
 
