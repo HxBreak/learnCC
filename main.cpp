@@ -15,7 +15,7 @@ using namespace std;
 #define BUFFER_LEN = 8192
 
 class Http {
-    typedef void (*DataCallback)(const char * data);
+    typedef void (*DataCallback)(const char * data, int);
 protected:
     const char* DEFAULT_METHOD = "GET";
     const char* DEFAULT_CONTENT_TYPE = "raw";
@@ -60,6 +60,9 @@ private:
         };
         memcpy(&sockIn.sin_addr.s_addr, host->h_addr, host->h_length);
         _fd = socket(AF_INET, SOCK_STREAM, 0);
+        struct timeval timeout = {3, 0};
+        setsockopt(_fd, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeval));
+        setsockopt(_fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeval));
         if (connect(_fd, (sockaddr *) &sockIn, sizeof(sockIn)) == -1) {
             cout << "CONNECT FAILED" << endl;
         } else{
@@ -100,7 +103,7 @@ private:
                 close(_fd);
             }
             if(body && result >= 0){
-                callback(buffer);
+                callback(buffer, result);
             }
             if(!body && result > 0){
                 head.write(buffer, result);
@@ -108,7 +111,7 @@ private:
                 signed long pos = s.find("\r\n\r\n", 0);
                 if(pos > 0){
                     body = true;
-                    callback(buffer + pos + 4);
+                    callback(buffer + pos + 4, result - pos - 4);
                 }
             }
         } while (result > 0);
@@ -160,11 +163,11 @@ public:
 int main() {
     string c = "www.baidu.com";
     auto h = new Http(c);
-    h->setCallback([](const char * data){
+    h->setCallback([](const char * data, int size){
         cout << data;
     });
     h->exec();
-
+    delete h;
     return 0;
 }
 
