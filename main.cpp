@@ -10,12 +10,13 @@
 #include <sstream>
 #include <functional>
 #include <vector>
+#include <fcntl.h>
 
 using namespace std;
 #define BUFFER_LEN = 8192
 
 class Http {
-    typedef void (*DataCallback)(const char * data, int);
+    typedef void (*DataCallback)(const char * data, int size);
 protected:
     const char* DEFAULT_METHOD = "GET";
     const char* DEFAULT_CONTENT_TYPE = "raw";
@@ -160,13 +161,18 @@ public:
 };
 
 
+int fd = open("./d.html", O_WRONLY|O_CREAT|O_TRUNC);
 int main() {
     string c = "www.baidu.com";
     auto h = new Http(c);
-    h->setCallback([](const char * data, int size){
+    auto fn = [](const char * data, int size){
         cout << data;
-    });
+        if(size > 0)
+            write(fd, data, size);
+    };
+    h->setCallback(fn);
     h->exec();
+    close(fd);
     delete h;
     return 0;
 }
